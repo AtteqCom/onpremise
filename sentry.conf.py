@@ -86,7 +86,7 @@ SENTRY_USE_BIG_INTS = True
 
 # Instruct Sentry that this install intends to be run by a single organization
 # and thus various UI optimizations should be enabled.
-SENTRY_SINGLE_ORGANIZATION = Bool(env('SENTRY_SINGLE_ORGANIZATION', True))
+SENTRY_SINGLE_ORGANIZATION = Bool(env('SENTRY_SINGLE_ORGANIZATION', False))
 
 #########
 # Redis #
@@ -306,3 +306,31 @@ if 'GITHUB_APP_ID' in os.environ:
 if 'BITBUCKET_CONSUMER_KEY' in os.environ:
     BITBUCKET_CONSUMER_KEY = env('BITBUCKET_CONSUMER_KEY')
     BITBUCKET_CONSUMER_SECRET = env('BITBUCKET_CONSUMER_SECRET')
+
+#########################
+## LDAP Authentication ##
+#########################
+
+SENTRY_FEATURES["auth:register"] = False
+
+import ldap
+from django_auth_ldap.config import LDAPSearch, GroupOfNamesType
+
+
+# Baseline configuration.
+AUTH_LDAP_SERVER_URI = "ldap://ldap.atteq.com/"
+AUTH_LDAP_USER_SEARCH = LDAPSearch("ou=people,dc=atteq,dc=com", ldap.SCOPE_SUBTREE, "(uid=%(user)s)")
+AUTH_LDAP_BIND_DN = 'uid=atteq-robot,ou=people,dc=Atteq,dc=com'
+AUTH_LDAP_BIND_PASSWORD = FILL THE PASSWORD HERE!!!
+
+AUTHENTICATION_BACKENDS = (
+    'django_auth_ldap.backend.LDAPBackend',
+    'sentry.utils.auth.EmailAuthBackend',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+import logging
+logger = logging.getLogger('django_auth_ldap')
+logger.addHandler(logging.StreamHandler())
+logger.setLevel('DEBUG')
+
